@@ -1,3 +1,4 @@
+# imports for this project
 import os
 import re
 import random
@@ -13,10 +14,10 @@ from google.appengine.ext import db
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
                                autoescape=True)
-
+# using a secret key for password hashing
 secret = 'pizzalove'
 
-
+# hashing password stuff
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
@@ -95,7 +96,7 @@ def valid_pw(name, password, h):
 def users_key(group='default'):
     return db.Key.from_path('users', group)
 
-
+# Creating a user model that keeps track of all the users registered
 class User(db.Model):
     name = db.StringProperty(required=True)
     pw_hash = db.StringProperty(required=True)
@@ -124,12 +125,12 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
-
+# Creating a like model which keeps track of the person who liked the post and post id
 class Like(db.Model):
     uname = db.StringProperty(required=True)
     post_id = db.IntegerProperty(required=True)
 
-
+# This deals with like realted stuff
 class LikePost(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -162,13 +163,13 @@ class LikePost(BlogHandler):
                 post.put()
                 self.redirect('/?')
 
-
+# Creating a comment model that keeps track of content of comment, name of the person who commented and post id
 class Comment(db.Model):
     content = db.StringProperty(required=True)
     user_name = db.StringProperty(required=True)
     post_id = db.IntegerProperty(required=True)
 
-
+# This deals with comment related stuff
 class CommentFront(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -195,7 +196,7 @@ class CommentFront(BlogHandler):
         comment = greetings = Comment.all().filter('post_id =', int(post_id))
         self.redirect("/")
 
-
+# This deals with deleting the comment
 class DeleteComment(BlogHandler):
     def get(self, post_id, comment_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -218,7 +219,7 @@ class DeleteComment(BlogHandler):
         c.delete()
         self.redirect("/")
 
-
+# This deals with editing the comment
 class EditComment(BlogHandler):
     def get(self, post_id, comment_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -245,7 +246,7 @@ class EditComment(BlogHandler):
 def blog_key(name='default'):
     return db.Key.from_path('blogs', name)
 
-
+# Creating a post model that keeps track of all post related information
 class Post(db.Model):
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
@@ -259,7 +260,7 @@ class Post(db.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p=self)
 
-
+# This is the page that renders posts
 class BlogFront(BlogHandler):
     def get(self):
         posts = greetings = Post.all().order('-created')
@@ -268,7 +269,7 @@ class BlogFront(BlogHandler):
         else:
             self.render('frontp.html', posts=posts)
 
-
+# This is the page where blog related information can be viewed
 class ViewBlog(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -283,7 +284,7 @@ class ViewBlog(BlogHandler):
             self.render("permalink.html", post=post,
                         comment=comment, uname=self.user.name)
 
-
+# It deals with posting the blog
 class PostPage(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -295,7 +296,7 @@ class PostPage(BlogHandler):
 
         self.render("permalink.html", post=post)
 
-
+# Adding a new post 
 class NewPost(BlogHandler):
     def get(self):
         if self.user:
@@ -320,7 +321,7 @@ class NewPost(BlogHandler):
             self.render("newpost.html", subject=subject,
                         content=content, error=error)
 
-
+# Deleting existing post
 class deltePost(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -341,7 +342,7 @@ class deltePost(BlogHandler):
         post.delete()
         return self.redirect('/')
 
-
+# editing existing post
 class editPost(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -395,7 +396,7 @@ EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
-
+# Signup related validation
 class Signup(BlogHandler):
     def get(self):
         self.render("signup-form.html")
@@ -433,7 +434,7 @@ class Signup(BlogHandler):
     def done(self, *a, **kw):
         raise NotImplementedError
 
-
+# registering the user
 class Register(Signup):
     def done(self):
         # make sure the user doesn't already exist
@@ -448,7 +449,7 @@ class Register(Signup):
             self.login(u)
             self.redirect('/')
 
-
+# login related validation
 class Login(BlogHandler):
     def get(self):
         self.render('login-form.html')
@@ -465,7 +466,7 @@ class Login(BlogHandler):
             msg = 'Invalid login'
             self.render('login-form.html', error=msg)
 
-
+# logout related validation
 class Logout(BlogHandler):
     def get(self):
         self.logout()
