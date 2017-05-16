@@ -135,6 +135,9 @@ class LikePost(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
+        if not post:
+          self.error(404)
+          return
         if not self.user:
             self.redirect("/login")
             return
@@ -185,9 +188,17 @@ class CommentFront(BlogHandler):
             self.render("comment.html", post=post, user_name=self.user.name)
 
     def post(self, post_id):
+        
+        if not self.user:
+            self.redirect("/login")
+            return
+
         content = self.request.get('content')
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
+        if not post:
+            self.error(404)
+            return
         abc = Comment(parent=key, content=content,
                       user_name=self.user.name, post_id=int(post_id))
         abc.put()
@@ -203,6 +214,9 @@ class DeleteComment(BlogHandler):
         p = db.get(key)
         ckey = db.Key.from_path('Comment', int(comment_id), parent=key)
         c = db.get(ckey)
+        if not c:
+          self.error(404)
+          return
         if not self.user:
             self.redirect("/login")
             return
@@ -213,9 +227,19 @@ class DeleteComment(BlogHandler):
             return
 
     def post(self, post_id, comment_id):
+        
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         ckey = db.Key.from_path('Comment', int(comment_id), parent=key)
         c = db.get(ckey)
+        if not c:
+          self.error(404)
+          return
+        if not self.user:
+            self.redirect("/login")
+            return
+        if self.user.name != c.user.name:
+            self.redirect("/blog")
+
         c.delete()
         self.redirect("/")
 
@@ -232,8 +256,10 @@ class EditComment(BlogHandler):
         p = db.get(key)
         ckey = db.Key.from_path('Comment', int(comment_id), parent=key)
         c = db.get(ckey)
+        if not self.user:
+            self.redirect("/login")
         content = self.request.get('content')
-        if content and self.user.name == p.user_name:
+        if content and self.user.name == c.user_name:
             c.content = content
             c.put()
         else:
@@ -306,7 +332,8 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/')
+            self.redirect('/login')
+            return
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -362,6 +389,7 @@ class editPost(BlogHandler):
         post = db.get(key)
         if self.user.name != post.user_name:
             self.redirect('/')
+            return
         subject = self.request.get('subject')
         content = self.request.get('content')
         if subject and content:
