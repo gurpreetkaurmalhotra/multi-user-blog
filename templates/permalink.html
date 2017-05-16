@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="col-md-8 panel" style="margin-bottom:50px;margin-left:17%; margin-right:17%">
+        <div class="panel-body">
+
+<div class="nol">
+  {{post.render() | safe}}
+  </div>
+  <div class="row text-center">
+<a href="/blog/comment/{{post.key().id()}}" class="btn btn-default"><span class="glyphicon glyphicon-comment"></span>  add comments to this post </a>
+{% if post.user_name == uname %}
+<a href="/blog/delete/{{post.key().id()}}" class="btn btn-danger">delete post </a>
+<a href="/blog/edit/{{post.key().id()}}" class="btn btn-primary">edit post </a>
+{% endif %}
+</div>
+<h3 > Comments for this post </h3>
+{% for c in comment %}
+
+
+<div class="dialogbox">
+    <div class="body">
+      <span class="tip tip-left"></span>
+      <div class="message">
+        <b>{{c.user_name}}:</b>
+        <br>
+        {{c.content}}
+      </div>
+      <div class="text-right">
+        {% if c.user_name == uname %}
+            <a href="/blog/comment/delete/{{post.key().id()}}/{{c.key().id()}}" class="btn btn-danger"> Delete comment </a>
+            <a href="/blog/comment/edit/{{post.key().id()}}/{{c.key().id()}}" class="btn btn-primary"> Edit comment </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+{% endfor %}
+
+
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="col-md-8 panel" style="margin-bottom:50px;margin-left:17%; margin-right:17%">
+        <div class="panel-body">
+
+
+  {{post.render() | safe}}
+<a href="/blog/comment/{{post.key().id()}}" class="btn btn-default">
+
+<h3> comments for this post </h3>
+{% for c in comment %}
+
+<p>{{c.user_name}} : {{c.content}} </p>
+{% endfor %}
+
+
+
+</div>
+</div>
+{% endblock %}
