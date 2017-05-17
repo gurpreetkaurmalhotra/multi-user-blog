@@ -237,8 +237,9 @@ class DeleteComment(BlogHandler):
         if not self.user:
             self.redirect("/login")
             return
-        if self.user.name != c.user.name:
-            self.redirect("/blog")
+        if self.user.name != c.user_name:
+            self.redirect("/")
+            return
 
         c.delete()
         self.redirect("/")
@@ -249,8 +250,11 @@ class EditComment(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         ckey = db.Key.from_path('Comment', int(comment_id), parent=key)
         c = db.get(ckey)
-        self.render("editComment.html", content=c.content)
-
+        if self.user and self.user.name == c.user_name:
+            self.render("editComment.html", content=c.content)
+        else:
+            self.write("OOPS!! you have permissions\
+                        to edit your own comments only")
     def post(self, post_id, comment_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         p = db.get(key)
@@ -258,10 +262,15 @@ class EditComment(BlogHandler):
         c = db.get(ckey)
         if not self.user:
             self.redirect("/login")
+            return
         content = self.request.get('content')
-        if content and self.user.name == c.user_name:
+        if not content:
+          self.error(404)
+          return
+        if self.user.name == c.user_name:
             c.content = content
             c.put()
+            self.redirect("/")
         else:
             self.write("OOPS!! you have permissions\
                         to edit your own comments only")
@@ -387,6 +396,10 @@ class editPost(BlogHandler):
     def post(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
+        if not self.user:
+          self.redirect('/login')
+          return
+        
         if self.user.name != post.user_name:
             self.redirect('/')
             return
